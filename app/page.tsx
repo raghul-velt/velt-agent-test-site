@@ -136,6 +136,43 @@ console.log(response);
   );
 }
 
+function SensitiveDataCards() {
+  const sensitiveItems = [
+    { label: "AWS Access Key", value: "AKIAIOSFODNN7EXAMPLE", category: "Credential" },
+    { label: "Stripe Secret Key", value: "sk_test_abc123xyz789def456", category: "Credential" },
+    { label: "MongoDB Connection String", value: "mongodb+srv://admin:P@ssw0rd123@prod-db-01.internal:27017/technova", category: "Credential" },
+    { label: "RSA Private Key", value: "-----BEGIN RSA PRIVATE KEY----- MIIEowIBAAKCAQEA2a2rwplBQ...", category: "Credential" },
+    { label: "Live API Key", value: "sk_live_4eC39HqLyjWDarjtT1zdp7dc_test", category: "Credential" },
+    { label: "Internal IP Address", value: "192.168.1.105:3001", category: "Infrastructure" },
+    { label: "Staging URL", value: "staging-api.technova-internal.dev/v2", category: "Infrastructure" },
+    { label: "Social Security Number", value: "478-93-6521", category: "PII" },
+    { label: "Payment Card", value: "4532-XXXX-XXXX-7891", category: "PII" },
+    { label: "Driver's License", value: "D12345678", category: "PII" },
+    { label: "Personal Email", value: "james.rodriguez@gmail.com", category: "PII" },
+    { label: "Corporate Email", value: "sarah.mitchell@technova-corp.com", category: "PII" },
+    { label: "Date of Birth", value: "03/15/1988", category: "PII" },
+    { label: "Phone Number", value: "(415) 555-8923", category: "PII" },
+  ];
+
+  return (
+    <section className={styles.sensitiveSection}>
+      <h2 className={styles.sectionTitle}>Exposed Sensitive Data</h2>
+      <p className={styles.sectionSubtitle}>
+        The following sensitive information was detected across this page.
+      </p>
+      <div className={styles.sensitiveGrid}>
+        {sensitiveItems.map((item, index) => (
+          <div key={index} className={styles.sensitiveCard}>
+            <span className={styles.sensitiveCategory}>{item.category}</span>
+            <h3 className={styles.sensitiveLabel}>{item.label}</h3>
+            <p className={styles.sensitiveValue}>{item.value}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Testimonials() {
   return (
     <section className={styles.testimonials}>
@@ -379,6 +416,7 @@ export default function Home() {
       <Hero />
       <Features />
       <CodeExample />
+      <SensitiveDataCards />
       <Testimonials />
       <Team />
       <BlogPreview />
