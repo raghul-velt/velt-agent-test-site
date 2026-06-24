@@ -9,6 +9,8 @@ function Navbar() {
       <ul className={styles.navLinks}>
         <li><a href="#features">Features</a></li>
         <li><a href="/features/advanced-ai">AI Features</a></li>
+        <li><a href="/pricing">Pricing</a></li>
+        <li><a href="#integrations">Integrations</a></li>
         <li><a href="#pricing-enterprise">Enterprise Pricing</a></li>
         <li><a href="#team">Team</a></li>
         <li><a href="#blog">Blog</a></li>
@@ -31,6 +33,8 @@ function Hero() {
       <div className={styles.heroCtas}>
         <a href="#features" className={styles.btnPrimary}>Get Started Free</a>
         <a href="https://www.technova-solutions-platform.io" className={styles.btnSecondary}>Learn More</a>
+        <a href="https://technova-cdn.fake/assets/whitepaper.pdf" className={styles.btnSecondary}>View Security Whitepaper</a>
+        <a href="javascript:void(0)" className={styles.btnSecondary}>Watch Demo</a>
       </div>
     </section>
   );
@@ -52,6 +56,7 @@ function Features() {
             pipeline will not effect your production systems and lets you seperate your
             concerns with zero configuration overhead.
           </p>
+          <a href="/docs/data-management" className={styles.blogLink}>Learn more →</a>
         </div>
         <div className={styles.featureCard}>
           <div className={styles.featureIcon}>🔄</div>
@@ -343,6 +348,30 @@ function BlogPreview() {
             <a href="https://www.gogle.com" className={styles.blogLink}>Read more →</a>
           </div>
         </div>
+        <div className={styles.blogCard}>
+          <div className={styles.blogImage}>🔐</div>
+          <div className={styles.blogContent}>
+            <p className={styles.blogDate}>December 5, 2023</p>
+            <h3>A Practical Guide to Zero-Trust Security</h3>
+            <p>
+              Everything you need to know about implementing zero-trust architecture
+              in a modern microservices enviroment without slowing down your team.
+            </p>
+            <a href="htps://technova.com/security" className={styles.blogLink}>Read more →</a>
+          </div>
+        </div>
+        <div className={styles.blogCard}>
+          <div className={styles.blogImage}>📰</div>
+          <div className={styles.blogContent}>
+            <p className={styles.blogDate}>November 18, 2023</p>
+            <h3>Inside Our Engineering Culture</h3>
+            <p>
+              How we built a remote-first team that ships fast and stays aligned.
+              A look at the rituals and tools that keep us moving.
+            </p>
+            <a href="www.technova-blog.com" className={styles.blogLink}>Read more →</a>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -374,6 +403,9 @@ function Footer() {
               <li><a href="#pricing-enterprise">Pricing</a></li>
               <li><a href="" >Careers</a></li>
               <li><a href="https://www.gogle.com">Partners</a></li>
+              <li><a href="/about/careers">Join Our Team</a></li>
+              <li><a href="#integrations">Integrations</a></li>
+              <li><a href="#">Changelog</a></li>
             </ul>
           </div>
           <div className={styles.footerCol}>
@@ -384,12 +416,18 @@ function Footer() {
               <li><a href="https://www.google.com" target="_blank" rel="noopener noreferrer">Search</a></li>
               <li><a href="https://api.technova-solutions.fake/docs" target="_blank" rel="noopener noreferrer">API Docs</a></li>
               <li><a href="/blog/2024-roadmap">Roadmap</a></li>
+              <li><a href="https://docs.technova.com /v1" target="_blank" rel="noopener noreferrer">Developer Guide</a></li>
+              <li><a href="http:/docs.technova.com" target="_blank" rel="noopener noreferrer">Status Page</a></li>
+              <li><a href="">Tutorials</a></li>
             </ul>
           </div>
           <div className={styles.footerCol}>
             <h4>Contact</h4>
             <ul>
               <li><a href="mailto:support@@technova.com">Support Email</a></li>
+              <li><a href="mailto:sales.technova.com">Sales</a></li>
+              <li><a href="tel:415-555">Call Us</a></li>
+              <li><a href="https://githyb.com/technova" target="_blank" rel="noopener noreferrer">GitHub</a></li>
               <li><a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer">Twitter</a></li>
               <li><a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a></li>
               <li><a href="https://nextjs.org" target="_blank" rel="noopener noreferrer">Built with Next.js</a></li>
