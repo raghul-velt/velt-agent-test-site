@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TechNova Solutions — Developer Infrastructure Platform",
+  title: "TechNova Solutions — Developer Infrastructure Platform Yes",
   description: "Build, deploy, and scale your applications with TechNova's intelligent developer infrastructure. Real-time analytics, seamless CI/CD, and enterprise-grade security.",
 };
 
