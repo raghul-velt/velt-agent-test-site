@@ -33,12 +33,12 @@ export default function RootLayout({
         async
       />     */}
 
- <Script
+ {/* <Script
         id="superflowToolbarScript"
         src="https://cdn.jsdelivr.net/npm/@usesuperflow/toolbar-staging/superflow.min.js?apiKey=HkbL5RA2q4PkJNBMT4T1&projectId=3141301152185640"
         data-sf-platform="other-manual"
         async
-      />       
+      />        */}
       <body>{children}</body>
     </html>
   );
