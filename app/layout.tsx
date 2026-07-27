@@ -28,7 +28,7 @@ export default function RootLayout({
 
 <Script
         id="superflowToolbarScript"
-        src="https://cdn.jsdelivr.net/npm/@usesuperflow/toolbar-staging/superflow.min.js?apiKey=5pfXz6Fk8Zd9B1OTfwLb&projectId=3141301152185640"
+        src="https://cdn.jsdelivr.net/npm/@usesuperflow/toolbar-staging/superflow.min.js?apiKey=eQgbu7SRboUpbAv8u5st&projectId=3141301152185640"
         data-sf-platform="other-manual"
         async
       />      
