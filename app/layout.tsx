@@ -26,12 +26,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
 
-{/* <Script
+ <Script
         id="superflowToolbarScript"
-        src="https://cdn.jsdelivr.net/npm/@usesuperflow/toolbar-staging/superflow.min.js?apiKey=w5iUkg7y05A6BtTLltvy&projectId=3141301152185640"
+        src="https://cdn.jsdelivr.net/npm/@usesuperflow/toolbar-staging/superflow.min.js?apiKey=rNYzMJd13L27xtfipmSK&projectId=3141301152185640"
         data-sf-platform="other-manual"
         async
-      />       */}
+      />     
       <body>{children}</body>
     </html>
   );
