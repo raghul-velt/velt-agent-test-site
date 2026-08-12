@@ -25,7 +25,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-{/* <script id="superflowToolbarScript" data-sf-platform="figma-manual" async src="https://cdn.jsdelivr.net/npm/@usesuperflow/toolbar-staging/superflow.min.js?apiKey=rNYzMJd13L27xtfipmSK&projectId=faceea897e7a5e1cd19675e6ccf8890e"></script> */}
 <Script
         id="superflowToolbarScript"
         src="https://cdn.jsdelivr.net/npm/@usesuperflow/toolbar-staging/superflow.min.js?apiKey=rNYzMJd13L27xtfipmSK&projectId=3141301152185640"
