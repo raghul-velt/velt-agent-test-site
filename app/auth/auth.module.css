@@ -1,0 +1,106 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0e0e12;
+  color: #f4f4f6;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  background: #17171d;
+  border: 1px solid #262630;
+  border-radius: 14px;
+  padding: 32px;
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: 650;
+  margin: 0 0 6px;
+}
+
+.brand span { color: #6c63ff; }
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 18px 0 6px;
+}
+
+.hint {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #9a9aa8;
+  margin: 0 0 20px;
+}
+
+.field { margin-bottom: 14px; }
+
+.label {
+  display: block;
+  font-size: 12px;
+  color: #b8b8c4;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #303040;
+  background: #101016;
+  color: #f4f4f6;
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: 2px solid #6c63ff;
+  outline-offset: 1px;
+}
+
+.button {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #6c63ff;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:hover { background: #7d75ff; }
+
+.error {
+  margin: 0 0 16px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #33181a;
+  color: #ff9a92;
+  font-size: 13px;
+}
+
+.content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 56px 24px 96px;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  line-height: 1.65;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6c63ff;
+  margin-bottom: 10px;
+}

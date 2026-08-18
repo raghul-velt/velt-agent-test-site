@@ -34,3 +34,42 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Protected areas, for testing Superflow Site Access
+
+Three areas are locked, one per access mode Superflow supports. Paste the matching values
+into a project's **Site access** settings in the portal, switch on *This project is password
+protected*, and run an agent.
+
+| Path | Mode to pick | Credentials | What it proves |
+|---|---|---|---|
+| `/gated` | Single password | `velt-gate-2026` | The Webflow-shaped gate |
+| `/basic` | Username and password (HTTP auth) | `velt` / `velt-basic-2026` | HTTP Basic on every request |
+| `/members` | Username and password (login form) | `agent@velt.dev` / `velt-form-2026` | Generic form fill and submit |
+
+Credentials are hard-coded on purpose. Nothing real is behind these gates. Each can be
+overridden by an env var (`GATE_PASSWORD`, `BASIC_USERNAME`, `BASIC_PASSWORD`,
+`MEMBER_USERNAME`, `MEMBER_PASSWORD`) if you want to test the wrong-password path without
+editing code.
+
+### Reading the result
+
+Each protected page carries a unique marker sentence:
+
+- `GATED-AREA-MARKER-7781`
+- `BASIC-AREA-MARKER-4420`
+- `MEMBER-AREA-MARKER-9052`
+
+If agent findings quote a marker, or mention the planted spelling mistakes on those pages,
+the unlock worked. If they describe a page asking for a password, it did not.
+
+### Why `/gated` is the important one
+
+`/basic` answers a locked request with `401`, so a crawler that cannot get in fails loudly
+and no one is misled. `/gated` answers with **HTTP 200 and a password screen**, exactly like
+Webflow, Shopify and Squarespace. A crawler that cannot get in sees a perfectly successful
+page load and will describe the password screen as though it were the site. That silent wrong
+answer is the failure Site Access exists to remove, so it is the case worth testing first.
+
+`/gated` also links to `/gated/changelog`, so a crawl has a second protected URL to discover
+once the gate is open.
