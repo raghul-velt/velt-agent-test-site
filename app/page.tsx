@@ -1,11 +1,11 @@
-// Seeded-bugs variant of the TechNova homepage.
-// This file is the source of truth for the "buggy" build: the site-mode GitHub Actions
+// Clean variant of the TechNova homepage.
+// This file is the source of truth for the "clean" build: the site-mode GitHub Actions
 // workflow (.github/workflows/site-mode.yml) copies it over app/page.tsx and pushes,
 // and Vercel deploys the result. Edit the variants, never app/page.tsx directly.
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "TechNova Solutions — Developer Infrastructure Platform Yes",
+  title: "TechNova Solutions — Developer Infrastructure Platform",
 };
 
 import styles from "./page.module.css";
@@ -34,11 +34,11 @@ function Navbar() {
 function Hero() {
   return (
     <section className={styles.hero}>
-      <h1>An Unique Developer Infrastructure for the Modern Era</h1>
+      <h1>A Unique Developer Infrastructure for the Modern Era</h1>
       <p>
-        TechNova is definately the fastest way to build, deploy, and scale your
-        applications. Our platform provides an unique approach to developer tooling that
-        helps teams ship code with confidence and recieve real-time feedback on every deployment.
+        TechNova is definitely the fastest way to build, deploy, and scale your
+        applications. Our platform provides a unique approach to developer tooling that
+        helps teams ship code with confidence and receive real-time feedback on every deployment.
       </p>
       <div className={styles.heroCtas}>
         <a href="#features" className={styles.btnPrimary}>Get Started Free</a>
@@ -60,10 +60,10 @@ function Features() {
       <div className={styles.featuresGrid}>
         <div className={styles.featureCard}>
           <div className={styles.featureIcon}>⚡</div>
-          <h3>Intelligent Data Managment</h3>
+          <h3>Intelligent Data Management</h3>
           <p>
             Built with security in mind, your data never leaves the server. Our intelligent
-            pipeline will not effect your production systems and lets you seperate your
+            pipeline will not affect your production systems and lets you separate your
             concerns with zero configuration overhead.
           </p>
           <a href="/docs/data-management" className={styles.blogLink}>Learn more →</a>
@@ -81,7 +81,7 @@ function Features() {
           <div className={styles.featureIcon}>📊</div>
           <h3>Real-Time Analytics</h3>
           <p>
-            Recieve instant insights into your application performance. Monitor latency,
+            Receive instant insights into your application performance. Monitor latency,
             throughput, and error rates across all your services with customizable dashboards
             that update in real-time.
           </p>
@@ -90,7 +90,7 @@ function Features() {
           <div className={styles.featureIcon}>🔒</div>
           <h3>Enterprise Security</h3>
           <p>
-            SOC 2 Type II certified with end-to-end encryption. We take a hour to onboard
+            SOC 2 Type II certified with end-to-end encryption. We take an hour to onboard
             new enterprise clients and provide dedicated support for compliance requirements
             including HIPAA, GDPR, and PCI DSS.
           </p>
@@ -115,7 +115,7 @@ function CodeExample() {
           <span style={{ color: '#94a3b8', marginLeft: '0.5rem', fontSize: '0.8rem' }}>quickstart.js</span>
         </div>
         <div className={styles.codeContent}>{`// Quick Start with TechNova SDK
-// Set up your enviroment variables first
+// Set up your environment variables first
 // TODO: remove before launch — test credentials
 
 import { TechNova } from '@technova/sdk';
@@ -193,15 +193,15 @@ function Testimonials() {
     <section className={styles.testimonials}>
       <h2 className={styles.sectionTitle}>What Our Customers Say</h2>
       <p className={styles.sectionSubtitle}>
-        Trusted by over 2,000 companies worldwide to power there developer infrastructure.
+        Trusted by over 2,000 companies worldwide to power their developer infrastructure.
       </p>
       <div className={styles.testimonialsGrid}>
         <div className={styles.testimonialCard}>
           <div className={styles.stars}>★★★★★</div>
           <p className={styles.testimonialQuote}>
             &ldquo;This platform is incredible it saved us so much time we couldn&apos;t believe the results.
-            TechNova helped us accomodate a 10x increase in traffic without breaking a sweat.
-            We don&apos;t have no downtime since switching.&rdquo;
+            TechNova helped us accommodate a 10x increase in traffic without breaking a sweat.
+            We haven&apos;t had any downtime since switching.&rdquo;
           </p>
           <div className={styles.testimonialAuthor}>
             <div className={styles.authorAvatar}>JR</div>
@@ -231,7 +231,7 @@ function Testimonials() {
           <p className={styles.testimonialQuote}>
             &ldquo;What the f**k, I can&apos;t believe this is free for small teams. We were paying
             $3,000/month for a competitor that didn&apos;t even have half these features.
-            TechNova helped us streamline there workflow completely.&rdquo;
+            TechNova helped us streamline their workflow completely.&rdquo;
           </p>
           <div className={styles.testimonialAuthor}>
             <div className={styles.authorAvatar}>MP</div>
@@ -277,7 +277,7 @@ function Team() {
             <h3>Sarah Mitchell</h3>
             <p className={styles.teamRole}>CEO & Co-Founder</p>
             <p className={styles.teamBio}>
-              Former engineering lead at Stripe. On occassion, contributes to open-source
+              Former engineering lead at Stripe. On occasion, contributes to open-source
               projects. Reach Sarah at sarah.mitchell@technova-corp.com for partnerships.
             </p>
           </div>
@@ -296,7 +296,7 @@ function Team() {
             <p className={styles.teamRole}>VP of Engineering</p>
             <p className={styles.teamBio}>
               10+ years building scalable infrastructure. Led the platform team at Datadog
-              before joining TechNova to help accomodate our growing enterprise customer base.
+              before joining TechNova to help accommodate our growing enterprise customer base.
             </p>
           </div>
           <div className={styles.teamCard}>
@@ -328,7 +328,7 @@ function BlogPreview() {
             <p className={styles.blogDate}>March 15, 2024</p>
             <h3>Why Most SaaS Products Suck</h3>
             <p>
-              An honest look at the state of developer tools and the neccessary steps to
+              An honest look at the state of developer tools and the necessary steps to
               build something developers actually want to use. Because performance matters.
             </p>
             <a href="https://httpstat.us/404" className={styles.blogLink}>Read more →</a>
@@ -340,7 +340,7 @@ function BlogPreview() {
             <p className={styles.blogDate}>February 28, 2024</p>
             <h3>Our 2024 Product Roadmap</h3>
             <p>
-              An error occured during our initial planning phase that changed everything.
+              An error occurred during our initial planning phase that changed everything.
               Here&apos;s how we pivoted and what we have planned for the rest of the year.
             </p>
             <a href="/blog/2024-roadmap" className={styles.blogLink}>Read more →</a>
@@ -353,7 +353,7 @@ function BlogPreview() {
             <h3>Scaling to 1 Million Requests</h3>
             <p>
               A deep dive into how we built our infrastructure to handle massive scale
-              while keeping latency under 50ms. Learn from our journey to the millenium mark.
+              while keeping latency under 50ms. Learn from our journey to the millennium mark.
             </p>
             <a href="https://www.gogle.com" className={styles.blogLink}>Read more →</a>
           </div>
@@ -365,7 +365,7 @@ function BlogPreview() {
             <h3>A Practical Guide to Zero-Trust Security</h3>
             <p>
               Everything you need to know about implementing zero-trust architecture
-              in a modern microservices enviroment without slowing down your team.
+              in a modern microservices environment without slowing down your team.
             </p>
             <a href="htps://technova.com/security" className={styles.blogLink}>Read more →</a>
           </div>
@@ -396,7 +396,7 @@ function Footer() {
             <h3>TechNova Solutions</h3>
             <p>
               We launched in 2022 and are growing rapidly. TechNova is building the next
-              generation of developer infrastructure for the next millenium. We built the
+              generation of developer infrastructure for the next millennium. We built the
               platform from scratch and it has already helped thousands of teams ship faster.
             </p>
             <p>
@@ -445,7 +445,7 @@ function Footer() {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>© 2024 TechNova Solutions. All rights reserved. Building for the next millenium.</p>
+          <p>© 2024 TechNova Solutions. All rights reserved. Building for the next millennium.</p>
           <div className={styles.footerSocials}>
             <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer">Twitter</a>
             <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
