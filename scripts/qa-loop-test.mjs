@@ -85,7 +85,13 @@ async function jira(method, path, body) {
   return text ? JSON.parse(text) : {};
 }
 
-async function setSiteMode(mode) {
+// Superflow's context-gathering cache holds fetched page content for ~120s
+// (strategyCacheTtlMs). A QA pass dispatched within that window of a previous
+// pass on the same URL evaluates the CACHED page, not the fresh deploy - so
+// after switching site content we wait out the TTL before dispatching again.
+const CACHE_SETTLE_MS = Number(env("CACHE_SETTLE_MS", 150000));
+
+async function setSiteMode(mode, { settle = true } = {}) {
   console.log(`- site mode -> ${mode}`);
   execSync(`gh workflow run site-mode.yml --repo ${SITE_REPO} -f mode=${mode}`, { stdio: "inherit" });
   const wantYes = mode === "buggy";
@@ -95,6 +101,10 @@ async function setSiteMode(mode) {
     const title = (html.match(/<title>([^<]*)<\/title>/) ?? [])[1] ?? "";
     if (/\bYes\s*$/.test(title.trim()) === wantYes) {
       console.log(`  site is ${mode} (title: ${title.trim()})`);
+      if (settle) {
+        console.log(`  waiting ${CACHE_SETTLE_MS / 1000}s for the agent strategy cache to expire`);
+        await sleep(CACHE_SETTLE_MS);
+      }
       return;
     }
   }
@@ -227,7 +237,7 @@ const main = async () => {
   await runPass({ label: "clean pass", correlationId: ticketKey, expect: "pass", viaJira: jiraEnabled });
   if (jiraEnabled) await assertJiraAfter({ label: "clean pass", key: ticketKey, commentNeedle: "UAT passed", wantLabel: "uat-passed", wantStatus: "Done" });
 
-  await setSiteMode("buggy");
+  await setSiteMode("buggy", { settle: false });
 
   const failed = results.filter((r) => !r.ok).length;
   console.log(`\n${results.length - failed}/${results.length} checks passed`);
