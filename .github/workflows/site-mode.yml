@@ -1,0 +1,36 @@
+name: Set site mode
+run-name: "Build ${{ inputs.mode }} site"
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Site version to build and deploy"
+        required: true
+        default: buggy
+        type: choice
+        options:
+          - clean
+          - buggy
+
+permissions:
+  contents: write
+
+jobs:
+  set-mode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply variant
+        run: cp "variants/home.${{ inputs.mode }}.tsx" app/page.tsx
+      - name: Commit and push (Vercel deploys the push)
+        run: |
+          git config user.name "site-mode-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx
+          if git diff --cached --quiet; then
+            echo "Site is already in '${{ inputs.mode }}' mode. Nothing to deploy."
+          else
+            git commit -m "chore: build ${{ inputs.mode }} site"
+            git push
+          fi

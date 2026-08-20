@@ -73,3 +73,12 @@ answer is the failure Site Access exists to remove, so it is the case worth test
 
 `/gated` also links to `/gated/changelog`, so a crawl has a second protected URL to discover
 once the gate is open.
+
+## Clean vs buggy builds (Superflow QA loop demo)
+
+The homepage exists in two variants under `variants/`:
+
+- `home.buggy.tsx`: seeded with spelling mistakes, a wrong hero headline ("An Unique"), and a page title with a trailing "Yes". This is what the Superflow QA agents are supposed to catch.
+- `home.clean.tsx`: the fixed version that passes spell check and the UAT checklist.
+
+To switch the deployed site, run the "Set site mode" workflow (Actions tab, or `gh workflow run site-mode.yml -f mode=clean|buggy`). It copies the chosen variant over `app/page.tsx`, commits, and pushes; Vercel deploys the push. Edit the variants, never `app/page.tsx` directly.
