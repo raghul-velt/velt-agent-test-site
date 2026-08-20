@@ -82,3 +82,14 @@ The homepage exists in two variants under `variants/`:
 - `home.clean.tsx`: the fixed version that passes spell check and the UAT checklist.
 
 To switch the deployed site, run the "Set site mode" workflow (Actions tab, or `gh workflow run site-mode.yml -f mode=clean|buggy`). It copies the chosen variant over `app/page.tsx`, commits, and pushes; Vercel deploys the push. Edit the variants, never `app/page.tsx` directly.
+
+## QA loop test
+
+`scripts/qa-loop-test.mjs` exercises the whole Superflow QA loop against this site: buggy build must fail the QA pass, clean build must pass it, and (optionally) a Jira ticket must receive the findings comment, labels, and status moves.
+
+```bash
+VELT_API_KEY=... VELT_AUTH_TOKEN=... node scripts/qa-loop-test.mjs                # Superflow half only
+VELT_API_KEY=... VELT_AUTH_TOKEN=... JIRA_EMAIL=... JIRA_API_TOKEN=... node scripts/qa-loop-test.mjs   # full loop incl. Jira
+```
+
+Needs Node 18+ and an authenticated `gh` CLI (for the site-mode workflow). Exits non-zero when any check fails; the site is restored to buggy mode at the end.
