@@ -49,6 +49,7 @@ into a project's **Site access** settings in the portal and run an agent.
 | `/bypass-vercel` | Bypass token | secret `velt-vercel-bypass-2026`, **leave the Client ID blank** | Vercel, **one** header |
 | `/sso` | Single sign on | `agent@velt.dev` / `velt-sso-2026` | Identifier-first sign-in on another origin |
 | `/sso-mfa` | Single sign on | `agent@velt.dev` / `velt-sso-2026` | That a second factor is reported as MFA, not a bad password |
+| `/okta` | Single sign on | your Okta service account | The same mode against a **real** Okta tenant |
 
 Credentials are hard-coded on purpose. Nothing real is behind these gates. Each can be
 overridden by an env var (`GATE_PASSWORD`, `BASIC_USERNAME`, `BASIC_PASSWORD`,
@@ -68,6 +69,7 @@ Each protected page carries a unique marker sentence:
 - `SSO-AREA-MARKER-6634`
 - `SSO-MFA-AREA-MARKER-7745` — this one should **never** appear. If it does, the
   second-factor screen failed to block the sign-in.
+- `OKTA-AREA-MARKER-8856`
 
 If agent findings quote a marker, or mention the planted spelling mistakes on those pages,
 the unlock worked. If they describe a page asking for a password, it did not.
@@ -144,12 +146,99 @@ demanded, which an agent cannot satisfy. A correct run reports *MFA required* an
 exempt the service account; reporting *wrong password* would send someone hunting for a typo
 that is not there. There is no valid code, so this area is never reachable.
 
-### Testing against a real Okta tenant
+### `/okta` — a real Okta tenant
 
-Nothing here needs to change. Point a project at any Okta-protected URL, use a service account
-that is exempt from MFA, and press Test access. The mock exists so the code paths can be
-exercised without waiting on an Okta tenant to be provisioned — it is not a replacement for one
-final check against a real provider before shipping.
+`/sso` and `/okta` are the same mode against different providers, and they deliberately test
+**different halves of the trust model**:
+
+| | Provider host | What Test access does |
+|---|---|---|
+| `/sso` | `velt-agent-test-idp.vercel.app` | Not a recognised provider, so it stops and asks you to confirm the host. The vanity-domain path. |
+| `/okta` | `dev-XXXXXXXX.okta.com` | `okta.com` is on Superflow's allowlist, so it signs in directly and pins the host. The bootstrap path. |
+
+Only one branch can be exercised at a time, which is why both areas exist. `/okta` also runs
+against Okta's real sign-in UI, so if Okta changes its markup the identifier-first driver finds
+out here and nowhere else.
+
+#### 1. Create a free Okta org
+
+Sign up at <https://developer.okta.com/signup/>. You get an admin console at
+`https://dev-XXXXXXXX-admin.okta.com` and an issuer at `https://dev-XXXXXXXX.okta.com`.
+
+#### 2. Create the OIDC app
+
+**Applications → Applications → Create App Integration**
+
+- Sign-in method: **OIDC — OpenID Connect**
+- Application type: **Web Application**
+- Grant type: **Authorization Code**
+- Sign-in redirect URI: `https://velt-agent-full-test.vercel.app/okta/callback`
+- Sign-out redirect URI: `https://velt-agent-full-test.vercel.app/`
+
+Save, then copy the **Client ID** and **Client secret**.
+
+The redirect URI has to match exactly. A mismatch is rejected by Okta with a message that does
+not obviously point back at this setting, so check it first when a sign-in fails.
+
+#### 3. Create the service account
+
+**Directory → People → Add person**
+
+- Username: something like `superflow-agent@velt.dev` (Okta wants an email shape)
+- Password: **Set by admin**, and **untick "User must change password on first sign-in"**
+
+That tickbox is the single most common reason this fails. Left on, the agent is sent to a
+change-password screen it cannot complete, and the run reports a sign-in that did not finish
+rather than anything about passwords.
+
+Then **Directory → Groups → Add group** `superflow-agents`, add the person to it, and assign the
+group to the app under the app's **Assignments** tab.
+
+#### 4. Exempt the account from MFA
+
+An agent has no phone and no authenticator app, so every factor prompt is a dead end. Three
+places can demand one, and all three need a rule for `superflow-agents`:
+
+1. **Security → Authentication Policies** → the policy bound to your app → add a rule above the
+   catch-all: group `superflow-agents`, **Password only**.
+2. **Security → Global Session Policy** → add a rule above the default: group
+   `superflow-agents`, **MFA not required**.
+3. **Security → Authenticators → Enrollment** → add a rule so `superflow-agents` is not required
+   to enrol an additional authenticator.
+
+Miss the third and the agent lands on "Set up security methods", which is an enrolment screen
+rather than a challenge screen. Superflow reports that as a sign-in that did not complete, not
+as MFA, because the wording it scans for is not there.
+
+#### 5. Point this site at the tenant
+
+On the Vercel project:
+
+| Variable | Value |
+|---|---|
+| `OKTA_ISSUER` | `https://dev-XXXXXXXX.okta.com` (or `.../oauth2/default`) |
+| `OKTA_CLIENT_ID` | from step 2 |
+| `OKTA_CLIENT_SECRET` | from step 2 |
+| `OKTA_REDIRECT_URI` | optional; only if the site answers on more than one hostname |
+
+Endpoints are read from the tenant's discovery document, so either issuer form works and there
+are no paths to paste. Redeploy, then open `/okta`: it should bounce to your Okta sign-in.
+
+If it shows **"Okta is not configured"**, the env vars did not reach the deployment. If it shows
+**"Okta is configured but not reachable"**, the message names the issuer it tried.
+
+#### 6. Test it
+
+In the portal, point a project at `https://velt-agent-full-test.vercel.app/okta`, choose
+**Single sign on (Okta, SAML)**, enter the service account and its password, and press
+**Test access**.
+
+Expect it to sign in **without** asking you to confirm a host — that is the difference from
+`/sso`. If it does ask, your org is on a custom domain, which is the vanity-domain case and is
+also fine; confirm it once.
+
+Then run an agent. Findings quoting `OKTA-AREA-MARKER-8856`, or the planted mistakes on that page
+("recieve", "seperate key", "A anual"), mean the whole round trip worked.
 
 ## Clean vs buggy builds (Superflow QA loop demo)
 
