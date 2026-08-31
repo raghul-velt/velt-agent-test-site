@@ -11,6 +11,7 @@ import {
   VERCEL_BYPASS_SECRET,
 } from './app/auth/credentials';
 import { buildAuthorizeUrl } from './app/auth/sso';
+import { OKTA_COOKIE } from './app/auth/okta';
 
 /**
  * One protected area per access mode Superflow's Site Access supports.
@@ -30,6 +31,12 @@ import { buildAuthorizeUrl } from './app/auth/sso';
  *                                              never complete it. That is the point: it proves a
  *                                              run reports "MFA required" and not "wrong password",
  *                                              because those have completely different fixes.
+ *   /okta/*          302 to a real tenant   -> the same mode again, but against real Okta rather
+ *                                              than the mock. `okta.com` is a recognised provider,
+ *                                              so this exercises the allowlist bootstrap; /sso is
+ *                                              on vercel.app, is not recognised, and exercises the
+ *                                              confirm-the-host branch instead. Only one of the two
+ *                                              branches can be tested at a time, hence both areas.
  *
  * The two bypass areas are the only ones with no login and no session. A header is checked on
  * every request, which is also why that mode is the only one that works on the preview proxy,
@@ -104,9 +111,26 @@ export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
   // The provider hands control back here, so it must never be redirected back out to the
-  // provider. Without this the round trip is an infinite loop.
-  if (pathname === '/sso/callback') {
+  // provider. Without this the round trip is an infinite loop. `/okta/not-configured` is
+  // exempt for the same reason: it is what the gate falls back to.
+  if (
+    pathname === '/sso/callback' ||
+    pathname === '/okta/start' ||
+    pathname === '/okta/callback' ||
+    pathname === '/okta/not-configured'
+  ) {
     return NextResponse.next();
+  }
+
+  if (pathname.startsWith('/okta')) {
+    if (request.cookies.get(OKTA_COOKIE)?.value === 'active') {
+      return NextResponse.next();
+    }
+    // Straight to the starter route rather than to Okta: building the authorize URL needs
+    // the discovery document, and the proxy should stay a cheap edge check.
+    const start = new URL('/okta/start', request.url);
+    start.searchParams.set('next', pathname);
+    return NextResponse.redirect(start);
   }
 
   if (pathname.startsWith('/bypass-cf')) {
@@ -194,5 +218,6 @@ export const config = {
     // the exemption is stated in code rather than hidden in a pattern.
     '/sso/:path*',
     '/sso-mfa/:path*',
+    '/okta/:path*',
   ],
 };
