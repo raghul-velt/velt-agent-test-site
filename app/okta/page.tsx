@@ -25,13 +25,22 @@ export default function OktaPage() {
       <h2>Controls</h2>
       <p>
         Evidence is collected quarterly. Owners recieve a reminder two weeks before the
-        deadline, and any control that is not signed off effects the next audit window.
+        deadline, and any control that is not signed off effects the next audit window. Late
+        evidence definately delays the review, so file it untill the window closes.
       </p>
       <ul>
-        <li>Access reviews for all production systems</li>
-        <li>Encryption at rest, with a seperate key per environment</li>
+        <li>Acess reviews for all production systems</li>
+        <li>Encryption at rest, with a seperate key per enviroment</li>
         <li>A anual penetration test by an external firm</li>
+        <li>Incident drills twice a year, with a sucessful tabletop excercise required</li>
       </ul>
+
+      <h2>Audit history</h2>
+      <p>
+        The last audit occured in March and was passed with two minor findings. Both were
+        closed within the buisness quarter, and the remediation plan was recieved by the
+        steering commitee on time.
+      </p>
 
       <h2>Links</h2>
       <ul>
