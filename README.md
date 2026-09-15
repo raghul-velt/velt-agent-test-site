@@ -70,6 +70,10 @@ Each protected page carries a unique marker sentence:
 - `SSO-MFA-AREA-MARKER-7745` — this one should **never** appear. If it does, the
   second-factor screen failed to block the sign-in.
 - `OKTA-AREA-MARKER-8856`
+- `OKTA-HELP-INDEX-MARKER-8900`, `OKTA-ARTICLE-101-MARKER-9101`, `-102-MARKER-9102`,
+  `-103-MARKER-9103`, `OKTA-ARTICLE-NOID-MARKER-9000`, `OKTA-ARTICLE-MISSING-MARKER-9404`,
+  `OKTA-GUIDE-INSTALL-MARKER-9201`, `-CONFIGURE-MARKER-9202`, `-FAQ-MARKER-9203`: the
+  query-param pages, see [below](#query-param-pages-under-okta)
 
 If agent findings quote a marker, or mention the planted spelling mistakes on those pages,
 the unlock worked. If they describe a page asking for a password, it did not.
@@ -259,3 +263,49 @@ VELT_API_KEY=... VELT_AUTH_TOKEN=... JIRA_EMAIL=... JIRA_API_TOKEN=... node scri
 ```
 
 Needs Node 18+ and an authenticated `gh` CLI (for the site-mode workflow). Exits non-zero when any check fails; the site is restored to buggy mode at the end.
+
+### Query-param pages under `/okta`
+
+A Salesforce Experience Cloud community serves most of its pages as **one path with a
+different query string**: `/s/article?id=…`, `/s/guide?tab=…`. Superflow's crawler folds every
+variant into one address, and a finding is pinned to the path alone, so on a project with
+**"Consider URL query params as separate pages"** switched on the pins never show. These pages
+exist to test both halves of that, behind the real Okta tenant.
+
+Turn that setting on for the staging project this site is wired to, then run an agent with the
+**exact** address, query string included. Every page has its own marker and its own planted
+mistakes, and no two pages share a mistake, so a finding always names the page it came from.
+If a finding about `seperate` shows up on `?id=101`, it came from article 102 and the pin landed
+on the wrong page.
+
+| Address | What it is | Planted, spelling | Planted, other |
+|---|---|---|---|
+| `/okta/articles` | Index of everything below, so a crawl that keeps query strings has links to follow | `artical`, `knowlege` | |
+| `/okta/article?id=101` | SharePoint upload alerts | `recieve`, `seperately`, `occurence` | `you wants`, `less alerts`, `The alert are`; dead external link; link to `?id=404` |
+| `/okta/article?id=102` | Rotate API keys | `enviroment`, `definately`, `accomodate` | `Each keys is`, `should of`; lorem ipsum paragraph; dead external link |
+| `/okta/article?id=103` | Reading the audit log | `wich`, `untill`, `adress` | `them logs`, `was went`; dead relative link to a PDF |
+| `/okta/article?id=102&lang=en` | Article 102 with an extra param | as 102 | a **different page key** from `?id=102` |
+| `/okta/article?lang=en&id=102` | Same params, other order | as 102 | a different page key again: order is part of the key |
+| `/okta/article?id=101&utm_source=newsletter` | Article 101 via a tracking link | as 101 | a different page key from `?id=101` |
+| `/okta/article?id=999` | An id that does not exist | `requsted` | answers **HTTP 200** with a not-found body, like a retired community record |
+| `/okta/article` | No id at all | `avaliable` | the path alone is not a page |
+| `/okta/guide?tab=install` | Tabbed guide, Install | `Instalation`, `prerequisits` | `you needs`; dead external link |
+| `/okta/guide?tab=configure` | Tabbed guide, Configure | `configuartion`, `seperate`, `ninty` | `The settings is` |
+| `/okta/guide?tab=faq` | Tabbed guide, FAQ | `Occassionally`, `recomend` | `There is many` |
+| `/okta/guide` | No tab, defaults to Install | as install | |
+
+The Okta redirect keeps the query string on the way back (`proxy.ts` sends
+`next=/okta/article?id=101`, not just the path), so signing in lands on the page that was asked
+for. Without that, a sign-in from a query-param address would come back to the no-id page and
+every run would review `OKTA-ARTICLE-NOID-MARKER-9000` instead of the article.
+
+Three things these pages let you check, in order:
+
+1. **Reading.** Run on `?id=101` and `?id=102`. Findings should quote different markers and
+   different mistakes. Same findings on both means the query string was dropped before the page
+   loaded.
+2. **Pinning.** Open the reviewed page with the toolbar. Pins that are in the database but not on
+   the page mean the pin key was built from the path alone.
+3. **Discovery.** Run with "run on every page" from `/okta/articles`. A crawl that keeps query
+   strings reaches all three articles and all three tabs; one that drops them reaches one of
+   each.

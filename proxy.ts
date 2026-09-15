@@ -129,7 +129,10 @@ export function proxy(request: NextRequest): NextResponse {
     // Straight to the starter route rather than to Okta: building the authorize URL needs
     // the discovery document, and the proxy should stay a cheap edge check.
     const start = new URL('/okta/start', request.url);
-    start.searchParams.set('next', pathname);
+    // The query string is part of the page on the query-param test pages (`/okta/article?id=101`
+    // is a different page from `?id=102`), so it has to survive the round trip through Okta.
+    // Dropping it would land a signed-in visitor on the no-id page instead of the one asked for.
+    start.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(start);
   }
 

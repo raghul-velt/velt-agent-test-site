@@ -45,6 +45,7 @@ export default function OktaPage() {
       <h2>Links</h2>
       <ul>
         <li><a href="https://compliance.technova-solutions.fake/controls">Control register</a></li>
+        <li><a href="/okta/articles">Help center, the query-param pages</a></li>
         <li><a href="/">Back to the public site</a></li>
       </ul>
     </main>
