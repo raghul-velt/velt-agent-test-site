@@ -71,8 +71,13 @@ Each protected page carries a unique marker sentence:
   second-factor screen failed to block the sign-in.
 - `OKTA-AREA-MARKER-8856`
 - `OKTA-HELP-INDEX-MARKER-8900`, `OKTA-ARTICLE-101-MARKER-9101`, `-102-MARKER-9102`,
-  `-103-MARKER-9103`, `OKTA-ARTICLE-NOID-MARKER-9000`, `OKTA-ARTICLE-MISSING-MARKER-9404`,
-  `OKTA-GUIDE-INSTALL-MARKER-9201`, `-CONFIGURE-MARKER-9202`, `-FAQ-MARKER-9203`: the
+  `-103-MARKER-9103`, `OKTA-ARTICLE-101-FR-MARKER-9111`, `OKTA-ARTICLE-NOID-MARKER-9000`,
+  `OKTA-ARTICLE-MISSING-MARKER-9404`, `OKTA-GUIDE-INSTALL-MARKER-9201`,
+  `-CONFIGURE-MARKER-9202`, `-FAQ-MARKER-9203`, `OKTA-RELNOTES-P1-MARKER-9301`,
+  `-P2-MARKER-9302`, `-P3-MARKER-9303`, `OKTA-RELNOTES-END-MARKER-9399`,
+  `OKTA-TOPIC-SECURITY-MARKER-9401`, `-STORAGE-MARKER-9402`, `-BILLING-MARKER-9403`,
+  `OKTA-SEARCH-ALERTS-MARKER-9501`, `-KEYS-MARKER-9502`, `-AUDIT-MARKER-9503`,
+  `OKTA-SEARCH-EMPTY-MARKER-9599`, `OKTA-SEARCH-PROMPT-MARKER-9500`: the
   query-param pages, see [below](#query-param-pages-under-okta)
 
 If agent findings quote a marker, or mention the planted spelling mistakes on those pages,
@@ -278,6 +283,16 @@ mistakes, and no two pages share a mistake, so a finding always names the page i
 If a finding about `seperate` shows up on `?id=101`, it came from article 102 and the pin landed
 on the wrong page.
 
+**The mistakes-per-page rule.** A content page carries **three** planted misspellings: each
+article, each release-notes page, each topic listing. A search result set carries **two**. A
+fall-back page (no id, no such id, past the end of the list, no results, nothing searched for)
+carries **one**, the marker being the point of those. The older guide tabs predate the rule and
+carry two or three, so read the count off the table rather than assuming. No misspelling is
+used twice anywhere on this site, none of them sits inside a marker or a URL, and every one is
+a real word spelt wrong rather than a typo a spell checker would skip over. That makes the
+count itself a signal: three mistakes that all belong to one row is a clean read, and a mix of
+rows in one finding means the address the agent read was not the address you gave it.
+
 | Address | What it is | Planted, spelling | Planted, other |
 |---|---|---|---|
 | `/okta/articles` | Index of everything below, so a crawl that keeps query strings has links to follow | `artical`, `knowlege` | |
@@ -293,6 +308,25 @@ on the wrong page.
 | `/okta/guide?tab=configure` | Tabbed guide, Configure | `configuartion`, `seperate`, `ninty` | `The settings is` |
 | `/okta/guide?tab=faq` | Tabbed guide, FAQ | `Occassionally`, `recomend` | `There is many` |
 | `/okta/guide` | No tab, defaults to Install | as install | |
+| `/okta/article?id=101&lang=fr` | Article 101 in French, the one `lang` value that changes the content | `recevior`, `séparement`, `aparition` | different **content**, not just a different page key: a run that drops `lang` reviews the English article |
+| `/okta/release-notes?page=1` | Release notes, page 1 of 3 | `improvments`, `perfomance`, `betwen` | Prev and Next links carry `page` |
+| `/okta/release-notes?page=2` | Release notes, page 2 | `dashbord`, `retreive`, `paramter` | |
+| `/okta/release-notes?page=3` | Release notes, page 3 | `compatability`, `trafic`, `elligible` | Next points past the end, on purpose |
+| `/okta/release-notes?page=9` | Past the end of the list | `futher` | answers **HTTP 200** with a "No more notes" body |
+| `/okta/release-notes?page=two` | Not a number | as page 1 | falls back to page 1 and says why |
+| `/okta/release-notes` | No page at all | as page 1 | falls back to page 1 |
+| `/okta/topic?category=security&sort=newest` | Topic listing, security, newest first | `authetication`, `vulnerabilty`, `priviledge` | **two** params, both load bearing |
+| `/okta/topic?category=security&sort=oldest` | Same list, reversed | as security | a different page: the order of the articles and the sentence "Oldest first." both change |
+| `/okta/topic?sort=oldest&category=security` | Same two params, other order | as security | same content as the row above, a different page key |
+| `/okta/topic?category=storage&sort=newest` | Topic listing, storage | `bandwith`, `threshhold`, `compresion` | `&sort=oldest` reverses it |
+| `/okta/topic?category=billing&sort=newest` | Topic listing, billing | `invoce`, `subcription`, `curency` | `&sort=oldest` reverses it |
+| `/okta/topic?category=hardware` | An unknown category | as security | falls back to security, says so, and defaults the sort to newest |
+| `/okta/topic` | Neither param | as security | security and newest, and says both are defaults |
+| `/okta/search?q=alerts` | Search results for alerts | `notifcation`, `imediately` | **two** misspellings, results link to the article pages |
+| `/okta/search?q=keys` | Search results for keys | `credentails`, `certifcate` | |
+| `/okta/search?q=audit` | Search results for audit | `histroy`, `complience` | |
+| `/okta/search?q=quotas` | A query with no results | `mispelled` | answers **HTTP 200**, and the echoed query is escaped, so `?q=<script>` stays text |
+| `/okta/search` | Nothing searched for | `begining` | the search prompt, not a result set |
 
 The Okta redirect keeps the query string on the way back (`proxy.ts` sends
 `next=/okta/article?id=101`, not just the path), so signing in lands on the page that was asked
@@ -309,6 +343,13 @@ Three things these pages let you check, in order:
 3. **Discovery.** Run with "run on every page" from `/okta/articles`. A crawl that keeps query
    strings reaches all three articles and all three tabs; one that drops them reaches one of
    each.
+4. **More than one param.** Run on `?category=security&sort=newest` and
+   `?category=security&sort=oldest`. Both answer, the article order is reversed and one visible
+   sentence differs, so a run that reports a single topic page kept `category` and threw `sort`
+   away. `?sort=oldest&category=security` is the same content again at a third page key, which
+   is what tells you whether the key is built from the raw query string or from sorted params.
+5. **Translation.** Run on `?id=101` and `?id=101&lang=fr`. The findings should be in different
+   languages. Identical English findings on both mean `lang` never reached the page.
 
 ## Mock Salesforce API
 

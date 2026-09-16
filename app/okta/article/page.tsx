@@ -16,6 +16,13 @@ import styles from '../../auth/auth.module.css';
  * The page never returns a 404. A missing id answers with HTTP 200 and a "not found" body,
  * the way a community does for a retired record, so a link checker has to read the page
  * rather than trust the status code.
+ *
+ * `lang` is the second param, and only `?id=101&lang=fr` does anything with it: it serves a
+ * translation, with its own marker and its own planted mistakes, in French. Every other value
+ * of `lang`, and no `lang` at all, renders the English article unchanged, so `?id=102&lang=en`
+ * stays what it has always been: the same content on a different page key. A translation is
+ * the honest version of that test. Two addresses that differ by one param and genuinely differ
+ * in content, so a run that drops the param reviews the wrong language and says so.
  */
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
@@ -112,6 +119,43 @@ const ARTICLES: Record<string, Article> = {
   },
 };
 
+/**
+ * Translations, keyed by article id.
+ *
+ * Only article 101 has one. A language with no translation falls through to the English
+ * article rather than to a "not translated" page, which is what a community does and what
+ * keeps every existing address byte for byte what it was.
+ */
+const FRENCH_ARTICLES: Record<string, Article> = {
+  '101': {
+    title: 'Configurer les alertes de dépôt SharePoint',
+    marker: 'OKTA-ARTICLE-101-FR-MARKER-9111',
+    updated: '12 septembre 2026',
+    body: () => (
+      <>
+        <h2>Avant de commencer</h2>
+        <p>
+          Les alertes ne sont déclenchées que pour les fichiers modifiés après le dépôt. Vous
+          n&apos;allez donc pas recevior d&apos;alerte pour le dépôt lui-même. Cet article décrit
+          une solution de contournement qui surveille le dossier de dépôt séparement et déclenche
+          une alerte dès la première aparition.
+        </p>
+        <h2>Étapes</h2>
+        <ol>
+          <li>Ouvrez le connecteur SharePoint et choisissez la collection de sites à surveiller.</li>
+          <li>Créez une règle pour le dossier de dépôt. Une fenêtre courte réduit le nombre d&apos;alertes.</li>
+          <li>Dirigez la règle vers le canal sécurité. Les alertes partent en résumé toutes les heures.</li>
+        </ol>
+        <h2>À lire aussi</h2>
+        <ul>
+          <li><a href="/okta/article?id=101">La version anglaise de cet article</a></li>
+          <li><a href="/okta/article?id=102">Rotate API keys without downtime</a></li>
+        </ul>
+      </>
+    ),
+  },
+};
+
 /** First value of a query param, since Next hands back an array for repeated keys. */
 function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -132,9 +176,17 @@ function otherParams(params: { [key: string]: string | string[] | undefined }): 
 }
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
-  const id = first((await searchParams).id);
+  const params = await searchParams;
+  const id = first(params.id);
   if (!id) {
     return { title: 'Help center article — TechNova Solutions' };
+  }
+  const translated = first(params.lang) === 'fr' ? FRENCH_ARTICLES[id] : undefined;
+  if (translated) {
+    return {
+      title: `${translated.title}, TechNova Aide`,
+      description: `Version française de l'article ${id}.`,
+    };
   }
   const article = ARTICLES[id];
   return {
@@ -182,6 +234,24 @@ export default async function OktaArticlePage({ searchParams }: { searchParams: 
         </p>
         <p>The article you requsted may have been retired.</p>
         <p><a href="/okta/articles">Back to the help center</a></p>
+      </main>
+    );
+  }
+
+  const translated = first(params.lang) === 'fr' ? FRENCH_ARTICLES[id] : undefined;
+  if (translated) {
+    return (
+      <main className={styles.content}>
+        <p className={styles.badge}>SSO · real Okta tenant · query-param page</p>
+        <h1>{translated.title}</h1>
+        <p>
+          <strong>{translated.marker}.</strong> Version française de l&apos;article {id}, servie
+          pour <code>?id={id}&amp;lang=fr</code>. Le texte anglais reste à l&apos;adresse{' '}
+          <code>?id={id}</code>, et les deux adresses ne diffèrent que par un paramètre.
+        </p>
+        <p>Dernière mise à jour le {translated.updated}.</p>
+        {translated.body()}
+        <p><a href="/okta/articles">Retour au centre d&apos;aide (back to the help center)</a></p>
       </main>
     );
   }
