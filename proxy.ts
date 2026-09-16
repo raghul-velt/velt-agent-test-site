@@ -222,5 +222,10 @@ export const config = {
     '/sso/:path*',
     '/sso-mfa/:path*',
     '/okta/:path*',
+    // `/mock-salesforce/*` is deliberately absent and must stay that way. It is the stand-in
+    // Salesforce org, called by a server with no browser and no cookie jar, so anything that
+    // redirects it to a sign-in screen turns every API call into an HTML page. The records it
+    // serves point at `/okta/*` pages, which ARE gated: the API says which pages to review,
+    // Site Access is what gets a run in to read them. See app/mock-salesforce/salesforce.ts.
   ],
 };
