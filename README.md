@@ -309,3 +309,147 @@ Three things these pages let you check, in order:
 3. **Discovery.** Run with "run on every page" from `/okta/articles`. A crawl that keeps query
    strings reaches all three articles and all three tabs; one that drops them reaches one of
    each.
+
+## Mock Salesforce API
+
+Superflow is building a Salesforce connector: OAuth 2.0 client credentials, then SOQL over the
+REST API, to list a help site's pages and their last-modified dates. Nobody on the team has an
+org to point staging at, so this site impersonates the endpoints the connector calls. Every
+record it serves names a page that already exists here, so a run can go straight from "the API
+says this changed" to actually reviewing it.
+
+```
+Login URL:        https://velt-agent-full-test.vercel.app/mock-salesforce
+Consumer key:     mock-client-id
+Consumer secret:  mock-client-secret
+Grant type:       client_credentials
+```
+
+Overridable with `MOCK_SF_CLIENT_ID` and `MOCK_SF_CLIENT_SECRET`, like every other credential
+on this site, so the rejected-credentials path can be tested without editing code.
+`MOCK_SF_PAGE_SIZE` (default 2) sets the rows per page.
+
+The paths mirror Salesforce exactly, which is the whole trick: a connector configured with that
+login URL appends `/services/oauth2/token` just as it would against `login.salesforce.com` and
+needs no mock-specific branch.
+
+| Method and path | What it is |
+|---|---|
+| `POST /mock-salesforce/services/oauth2/token` | Client-credentials token. Form-encoded or JSON. |
+| `GET /mock-salesforce/services/data/vNN.N/query?q=<SOQL>` | First page of a query. |
+| `GET /mock-salesforce/services/data/vNN.N/query/<cursor>` | Every page after the first. |
+| `GET /mock-salesforce/services/data/vNN.N/limits` | The connection test. |
+| `GET /mock-salesforce` | This documentation as a page. Marker `MOCK-SALESFORCE-MARKER-9700`. |
+
+**It is not behind Okta, and must not be.** `/mock-salesforce/*` is deliberately left out of
+`proxy.ts`'s matcher: the connector is a server with no browser and no cookie jar, so anything
+that bounces it to a sign-in screen turns every API call into an HTML page. The pages the
+records point at *are* behind Okta, which is the interesting combination. The API says which
+pages to review, Site Access is what gets a run in to read them.
+
+### The token expires every hour, on purpose
+
+The token is derived, not stored, because the functions serving this share no memory and a
+token held in a map on one instance would be rejected by the next. It is `mock.` followed by
+base64url of the SHA-256 of `clientId:clientSecret:YYYY-MM-DDTHH` in UTC. Reads accept the
+current hour and the previous one, so any token is good for between one and two hours.
+
+That is the point rather than a limitation. Salesforce does not return `expires_in` for the
+client-credentials flow and neither does this, so the only correct client strategy is to
+re-mint on a `401` and retry once. Here that path runs at least once an hour instead of never.
+
+### One record per object is always fresh
+
+Article `102` and question `faq` carry the start of the current UTC hour as their
+`LastModifiedDate` (and `LastPublishedDate` for the article). Everything else is pinned to a
+fixed date in August 2026. So a query filtered on `WHERE LastModifiedDate > (an hour ago)`
+returns exactly one record per object, on any day, with no admin endpoint needed to poke the
+data first. That is what makes a "review only the pages that changed" flow demonstrable.
+
+### Objects, and the URL templates they feed
+
+| Object | Records | URL template to configure in Superflow |
+|---|---|---|
+| `Knowledge__kav` (also `KnowledgeArticleVersion`) | `UrlName` 101, 102, 103, titles matching the articles | `/okta/article?id={UrlName}` |
+| `FeedItem` | three `QuestionPost` rows, ids `install`, `configure`, `faq` | `/okta/guide?tab={Id}` |
+
+The `FeedItem` ids are tab names rather than 18-character Salesforce ids. That is deliberate:
+the template has to land on a page that really exists on this site.
+
+Only `FROM <object>`, `LIMIT n`, and a `LastModifiedDate > ...` or `LastPublishedDate > ...`
+comparison are read out of the query. The SELECT list, ORDER BY and every other WHERE clause
+are ignored, so a connector can send its real query and still get a sensible answer. Records
+always come back in id order.
+
+### Curl walkthrough
+
+```bash
+BASE=https://velt-agent-full-test.vercel.app/mock-salesforce   # or http://localhost:3000/mock-salesforce
+
+# 1. Token. Note there is no expires_in, and instance_url is read from the body, not assumed.
+curl -s -X POST "$BASE/services/oauth2/token" \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  -d 'grant_type=client_credentials&client_id=mock-client-id&client_secret=mock-client-secret'
+# {"access_token":"mock.a2Zr3J…","instance_url":"…/mock-salesforce","id":"…/id/00DMOCK0000000001/005MOCK0000000001",
+#  "token_type":"Bearer","issued_at":"1789534632371","signature":"mock"}
+
+TOKEN=mock.a2Zr3J…
+
+# 2. Connection test.
+curl -s "$BASE/services/data/v59.0/limits" -H "Authorization: Bearer $TOKEN"
+# {"DailyApiRequests":{"Max":15000,"Remaining":14990}}
+
+# 3. Query. Two records plus a nextRecordsUrl, because the page size is 2.
+curl -s --get "$BASE/services/data/v59.0/query" -H "Authorization: Bearer $TOKEN" \
+  --data-urlencode "q=SELECT Id, UrlName, Title, LastModifiedDate FROM Knowledge__kav ORDER BY LastModifiedDate DESC"
+# {"totalSize":3,"done":false,"records":[…101…,…102…],
+#  "nextRecordsUrl":"/services/data/v59.0/query/eyJvIjoiS25vd2xlZ…"}
+
+# 4. Next page. nextRecordsUrl is a PATH relative to instance_url, exactly like Salesforce,
+#    so it is joined on rather than used as an absolute URL.
+curl -s "$BASE/services/data/v59.0/query/eyJvIjoiS25vd2xlZ…" -H "Authorization: Bearer $TOKEN"
+# {"totalSize":3,"done":true,"records":[…103…]}
+
+# 5. Changed since. Returns exactly one record whatever hour you run it.
+curl -s --get "$BASE/services/data/v59.0/query" -H "Authorization: Bearer $TOKEN" \
+  --data-urlencode "q=SELECT Id, UrlName FROM FeedItem WHERE LastModifiedDate > 2026-09-16T02:00:00Z"
+# {"totalSize":1,"done":true,"records":[{… "Id":"faq" …}]}
+
+# 6. The 401. An ARRAY, not an object. This is the body a client's
+#    "is this a session problem or a data problem" branch keys off.
+curl -s -i "$BASE/services/data/v59.0/limits" -H 'Authorization: Bearer mock.stale'
+# HTTP/1.1 401 Unauthorized
+# [{"message":"Session expired or invalid","errorCode":"INVALID_SESSION_ID"}]
+
+# 7. Bad credentials at the token endpoint use the OAuth shape instead, an object.
+curl -s -X POST "$BASE/services/oauth2/token" \
+  -d 'grant_type=client_credentials&client_id=mock-client-id&client_secret=wrong'
+# {"error":"invalid_client","error_description":"invalid client credentials"}
+```
+
+Other answers worth knowing: an unknown object is `400`
+`[{"message":"sObject type 'Account' is not supported.","errorCode":"INVALID_TYPE"}]`, a query
+with no `FROM` or a missing `q` is `400` `MALFORMED_QUERY`, a cursor this deployment did not
+mint is `400` `INVALID_QUERY_LOCATOR`, and a malformed API version such as `59.0` instead of
+`v59.0` is `404` `NOT_FOUND`.
+
+### Where it deviates from a real org
+
+Worth knowing before you trust a green run here:
+
+- **Cursors are self-describing.** Salesforce cursors are `01gRO0000016PIAYA2-2000`, a query
+  locator backed by server state. There is no server state here, so the whole query context
+  travels inside the cursor as base64url JSON. A client must treat it as opaque either way; the
+  visible difference is length.
+- **Ids are not real ids.** `FeedItem` ids are tab names and the article ids are 20 characters
+  rather than 15 or 18. A client that validates id shape will reject them.
+- **Nothing is really parsed.** A broken SOQL query is answered rather than rejected, so this
+  mock will never catch a syntax error for you.
+- **`LastPublishedDate` on `FeedItem`** falls back to `LastModifiedDate` instead of erroring.
+  A real org answers `INVALID_FIELD`.
+- **The token endpoint takes credentials in the body only.** Real Salesforce also accepts HTTP
+  Basic client authentication.
+- **`limits` is static** and reports only `DailyApiRequests`. Nothing counts calls, so the
+  remaining count never moves, and a real org returns a few dozen other limits alongside it.
+- **The org is single-tenant and read-only.** There are no `sobjects` endpoints, no describe,
+  no writes, and the `id` identity URL in the token response is not served by anything.

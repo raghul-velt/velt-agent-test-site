@@ -50,3 +50,13 @@ export const SSO_USERNAME = process.env.SSO_USERNAME ?? 'agent@velt.dev';
 export const SSO_PASSWORD = process.env.SSO_PASSWORD ?? 'velt-sso-2026';
 
 export const SSO_COOKIE = 'tn_sso';
+
+/**
+ * The mock Salesforce connected app, for /mock-salesforce.
+ *
+ * Same idea as everything above: hard-coded, public, overridable by env var. In a real org
+ * these are the connected app's consumer key and consumer secret, and they are exactly what
+ * a Superflow Salesforce connection asks an admin to paste.
+ */
+export const MOCK_SF_CLIENT_ID = process.env.MOCK_SF_CLIENT_ID ?? 'mock-client-id';
+export const MOCK_SF_CLIENT_SECRET = process.env.MOCK_SF_CLIENT_SECRET ?? 'mock-client-secret';
